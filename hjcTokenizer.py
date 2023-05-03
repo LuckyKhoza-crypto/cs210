@@ -274,10 +274,12 @@ class Tokenizer(object):
                 for c in self.line[1:]:
                     if c == '"':
                         self.line = self.line[len(token_str) + 2 :]
-                        token = (TK_STRING_CONST, token_str)
+                        self.token = (TK_STRING_CONST, token_str)
                         return
                     else:
                         token_str += c
+
+                    # print(token_str)
             # TODO1: Identify whether the current character begins an 
             #    integer constant, string constant, or identifier/keyword, and
             #    call the appropriate _Parse helper below.

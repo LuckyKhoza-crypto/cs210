@@ -45,11 +45,6 @@
 <symbol> ) </symbol>
 <symbol> { </symbol>
 <keyword> do </keyword>
-<identifier> do2coverage </identifier>
-<symbol> ( </symbol>
-<symbol> ) </symbol>
-<symbol> ; </symbol>
-<keyword> do </keyword>
 <identifier> Main </identifier>
 <symbol> . </symbol>
 <identifier> do2coverage </identifier>
