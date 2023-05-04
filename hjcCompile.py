@@ -316,20 +316,32 @@ class CompileEngine(object):
         ENTRY: Tokenizer positioned on the first keyword.
         EXIT:  Tokenizer positioned after final ';'.
         """
-        self._WriteXmlTag('<letStatement>\n')
+        
+
 
         # TODO-10A: Extend the code below to parse a let statement
         #           without array indexing.
         # TODO-10F: Account for array indexing.
+        self._WriteXmlTag('<letStatement>\n')
         self._ExpectKeyword(KW_LET)
+
         self._NextToken()
         self._ExpectIdentifier()
+
         self._NextToken()
+        if self._MatchSymbol('['):
+            self._NextToken()
+            self._CompileExpression()
+            self._ExpectSymbol(']')
+            self._NextToken()
         self._ExpectSymbol('=')
         self._NextToken()
         self._CompileExpression()
+    
         self._ExpectSymbol(';')
+        self._WriteXmlTag('</letStatement>\n')
         self._NextToken()
+
 
         # HINT: You will find this snippet of code helpful to handle
         #       assigning to arrays
@@ -348,9 +360,6 @@ class CompileEngine(object):
         #    The top value of the stack should be the value, and the value 
         #    underneath it should be a pointer to the location the value should 
         #    be stored. (See HINT above.)
-
-        self._WriteXmlTag('</letStatement>\n')
-
 
     def _CompileDo(self):
         """
@@ -441,27 +450,31 @@ class CompileEngine(object):
         ENTRY: Tokenizer positioned on the first keyword.
         EXIT:  Tokenizer positioned after final ';'.
         """
-        self._WriteXmlTag('<returnStatement>\n')
 
         # TODO-10A: Replace the following line with code to parse a
         #     return statement.
         # TODO-10B: Account for return values.
+        self._WriteXmlTag('<returnStatement>\n')
         self._ExpectKeyword(KW_RETURN)
         self._NextToken()
 
-        if  self._NextToken() != ';':
+        if( self.tokenizer.TokenType() != TK_SYMBOL) or ( self.tokenizer.Symbol() != ";"):
             self._CompileExpression()
-        self._ExpectSymbol(';')
+            
+        
+        # self._ExpectSymbol(';')
+        self._WriteXmlTag('<symbol> ; </symbol>\n')
+        self._WriteXmlTag('</returnStatement>\n')
         self._NextToken()
-        # self._SkipStatement(';')
-
+        # self._WriteXmlTag('<symbol> ; </symbol>\n')
+    
 
         
         # TODO-11A: In the case that no return expression was given, write
         #    the VM command to return value 0 for void functions.
         # TODO-11A: Write the VM return command.
 
-        # self._WriteXmlTag('</returnStatement>\n')
+        
 
 
     def _CompileIf(self):
@@ -530,17 +543,64 @@ class CompileEngine(object):
         ENTRY: Tokenizer positioned on the first keyword
         EXIT:  Tokenizer positioned after final '}'.
         """
+
         self._WriteXmlTag('<whileStatement>\n')
+        self._ExpectKeyword(KW_WHILE)
+
+        self._NextToken()
+        self._ExpectSymbol('(')
+
+        self._NextToken()
+        self._CompileExpression()
+
+        self._ExpectSymbol(')')
+
+        self._NextToken()
+
+        self._ExpectSymbol('{')
+
+        self._NextToken()
+
+        self._CompileStatements()
+        self._ExpectSymbol('}')
 
         condition = self._GetNextLabel("WHILE_EXP")
         end = self._GetNextLabel("WHILE_END")
 
-        # TODO-10C: Replace the skip below with code to parse a while statement.
-        # TODO-11B: Extend the function to emit VM code for a while statement.
-        self._SkipStatement('}')
+        self.vmWriter.WriteGoto(condition)
+        self.vmWriter.WriteLabel(condition)
+        self.vmWriter.WriteIf(end)
 
-        
+        self._NextToken()
         self._WriteXmlTag('</whileStatement>\n')
+
+
+        # self._WriteXmlTag('<whileStatement>\n')
+        # self._ExpectKeyword(KW_WHILE)
+        # self._NextToken()
+        # self._ExpectSymbol('(')
+
+        # self._NextToken()
+        # self._CompileExpression()
+        
+        # self._ExpectSymbol(')')
+
+        # self._NextToken()
+
+        # self._ExpectSymbol('{')
+        # self._NextToken()
+
+        # self._CompileStatements()
+        # self._ExpectSymbol('}')
+
+        # condition = self._GetNextLabel("WHILE_EXP")
+        # end = self._GetNextLabel("WHILE_END")
+
+        # # TODO-10C: Replace the skip below with code to parse a while statement.
+        # # TODO-11B: Extend the function to emit VM code for a while statement.
+        
+        # self._WriteXmlTag('</whileStatement>\n')
+        # self._NextToken()
 
 
     def _CompileExpression(self):
@@ -585,6 +645,7 @@ class CompileEngine(object):
         ENTRY: Tokenizer positioned on the term.
         EXIT:  Tokenizer positioned after the term.
         """
+        sanityCheck = True
         self._WriteXmlTag('<term>\n')
         # TODO-10D: Extend the following to account for subroutine calls.
         # TODO-10F: Extend the following to account for array indexing.
@@ -599,12 +660,52 @@ class CompileEngine(object):
         #           Note the helper function _EmitStringConstantVMCode above.
         # TODO-11D: Perform an array access on the variable if needed.
         #           See pp. 228-230.
+
+        
+
+
         if self.tokenizer.TokenType() == TK_INT_CONST:
             self._MatchIntConstant()
             self._NextToken()
-        else:
+        elif self.tokenizer.TokenType() == TK_STRING_CONST:
+            self._MatchStringConstant()
+            self._NextToken()
+        elif self.tokenizer.TokenType() == TK_KEYWORD:
+            self._MatchKeyword((KW_TRUE, KW_FALSE, KW_NULL, KW_THIS))
+            self._NextToken()
+        elif self.tokenizer.TokenType() == TK_IDENTIFIER:
+            self._ExpectIdentifier()
+        
+        self._NextToken()
+        if self.tokenizer.Symbol()== '[':
+            self._NextToken()
+            self._CompileExpression()
+            self._ExpectSymbol(']')
+        elif self.tokenizer.Symbol() == '(':
+            self._NextToken()
+            self._CompileExpression()
+            self._ExpectSymbol(')')
+
+        elif self.tokenizer.Symbol() == '.':
+            self._ExpectSymbol('.')
+            self._NextToken()
             self._ExpectIdentifier()
             self._NextToken()
+            self._ExpectSymbol('(')
+            self._NextToken()
+            self._CompileExpressionList()
+            self._ExpectSymbol(')')
+
+        elif self.tokenizer.Symbol() == '(':
+            self._ExpectSymbol('(')
+            self._NextToken()
+            self._CompileExpression()
+            self._ExpectSymbol(')')
+        elif self.tokenizer.Symbol() == '-':
+            self._ExpectSymbol('-')
+            self._NextToken()
+            self._CompileTerm()
+
 
         self._WriteXmlTag('</term>\n')
 
