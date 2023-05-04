@@ -705,7 +705,8 @@ class CompileEngine(object):
             self._ExpectSymbol('-')
             self._NextToken()
             self._CompileTerm()
-
+    
+l
 
         self._WriteXmlTag('</term>\n')
 
