@@ -360,8 +360,8 @@ class CompileEngine(object):
         self._CompileExpression()
     
         self._ExpectSymbol(';')
-        self._WriteXmlTag('</letStatement>\n')
         self._NextToken()
+        self._WriteXmlTag('</letStatement>\n')
 
     def _CompileDo(self):
         """
@@ -467,9 +467,10 @@ class CompileEngine(object):
         if( self.tokenizer.TokenType() != TK_SYMBOL) or ( self.tokenizer.Symbol() != ";"):
             self._CompileExpression()
 
-        self._WriteXmlTag('<symbol> ; </symbol>\n')
-        self._WriteXmlTag('</returnStatement>\n')
+        # self._WriteXmlTag('<symbol> ; </symbol>\n')
+        self._ExpectSymbol(';')
         self._NextToken()
+        self._WriteXmlTag('</returnStatement>\n')
 
     def _CompileIf(self):
         """
