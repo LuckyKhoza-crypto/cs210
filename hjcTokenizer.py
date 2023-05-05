@@ -229,6 +229,13 @@ class Tokenizer(object):
         """
         Parses the next token, storing it in self.token.
         """
+        # TODO1: Identify whether the current character begins an 
+            #    integer constant, string constant, or identifier/keyword, and
+            #    call the appropriate _Parse helper below.
+            #    In each case, set self.token to store the parsed token.
+            # HINT: See constants defined at the top of this file: keywords, symbols, identStart, identChars, etc.
+            #       See also hjcTokens.py for token type constants like TK_SYMBOL
+
         self.token = (None, None)
         #self.token is a tuple whose first element should be the token type, 
         #    and whose second item is the character(s) making up the token.
@@ -279,13 +286,6 @@ class Tokenizer(object):
                     else:
                         token_str += c
 
-                    # print(token_str)
-            # TODO1: Identify whether the current character begins an 
-            #    integer constant, string constant, or identifier/keyword, and
-            #    call the appropriate _Parse helper below.
-            #    In each case, set self.token to store the parsed token.
-            # HINT: See constants defined at the top of this file: keywords, symbols, identStart, identChars, etc.
-            #       See also hjcTokens.py for token type constants like TK_SYMBOL
         raise HjcError('Syntax error in line '+str(self.lineNumber)+': illegal character "' + ch + '"')
 
     def _ParseIdent(self):
@@ -301,8 +301,7 @@ class Tokenizer(object):
             for c in self.line:
                 if c in identChars:
                     parseString += c
-                else:
-                    break
+                else: break
                  
             if parseString in keywords:
                 self.line = self.line[len(parseString):]
@@ -312,7 +311,6 @@ class Tokenizer(object):
                 return  parseString
             
         else: return ""
-
 
     def _ParseInt(self):
         """
@@ -328,8 +326,7 @@ class Tokenizer(object):
             for c in self.line:
                 if c in numberChars:
                     parseInt += c
-                else:
-                    break
+                else: break
             self.line = self.line[len(parseInt):]
             return int(parseInt)
         return 0
@@ -341,9 +338,9 @@ class Tokenizer(object):
         Throws an error if the line ends without a closing quotation mark.
         """
         # TODO4: Compute the return value
-        string = self.line[0]
+        stringStart = self.line[0]
         self.line = self.line[1:]
-        if string == '"':
+        if stringStart == '"':
             parseString = ""
             for c in self.line:
                 if c == '"':
